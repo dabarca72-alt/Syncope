@@ -1,0 +1,402 @@
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SyncopeAid: Evaluación Rápida del Síncope en Urgencias</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilos base para la fuente y el fondo */
+        body {
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+            background-color: #ecf0f1; /* Fondo claro */
+        }
+        /* Clase para ocultar temporalmente la sección de resultados */
+        .hidden-result {
+            display: none;
+        }
+        /* Estilo para impresión, ocultando botones */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-med': '#3498db', 
+                        'primary-dark': '#2980b9', 
+                        'danger-med': '#e74c3c', 
+                        'danger-dark': '#c0392b', 
+                        'warning-med': '#f39c12', 
+                        'warning-dark': '#e67e22', 
+                        'success-med': '#2ecc71', 
+                        'success-dark': '#27ae60', 
+                        'accent-med': '#9b59b6', 
+                        'accent-dark': '#8e44ad', 
+                        'severity-alert': '#e74c3c', 
+                        'severity-bg': '#fdeded', 
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="p-4 md:p-8">
+
+    <header class="bg-gradient-to-r from-primary-med to-primary-dark text-white p-6 rounded-t-lg shadow-xl">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-center drop-shadow-md">🩺 SyncopeAid: Evaluación Rápida en Urgencias</h1>
+        <p class="text-center mt-2 text-lg font-light">Estratificación del Riesgo de Síncope basada en **CSRS** y guías EUSEM.</p>
+    </header>
+
+    <main class="bg-white p-6 md:p-8 shadow-xl rounded-b-lg">
+        
+        <form id="syncopeForm" class="space-y-6">
+
+            <section class="border-b-2 border-gray-200 pb-6">
+                <h2 class="text-2xl font-bold text-accent-med mb-4 flex items-center">
+                    <span class="mr-2">1️⃣</span> Paso 1: Anamnesis y Antecedentes
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div>
+                        <label for="antecedentesEdad" class="block text-gray-700 font-semibold mb-1">Edad Mayor o Igual a 65 años:</label>
+                        <select id="antecedentesEdad" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:border-primary-med focus:ring focus:ring-primary-med focus:ring-opacity-50">
+                            <option value="0">No / Desconocido</option>
+                            <option value="1">Sí (+1 CSRS)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="antecedentesCardiopatia" class="block text-gray-700 font-semibold mb-1">Antecedente de Cardiopatía (Ej. Isquemia, FA, Valvulopatía):</label>
+                        <select id="antecedentesCardiopatia" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:border-primary-med focus:ring focus:ring-primary-med focus:ring-opacity-50">
+                            <option value="0">No</option>
+                            <option value="1">Sí (+1 CSRS)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="disfuncionVentricular" class="block text-gray-700 font-semibold mb-1">Disfunción Ventricular (IC previa, **FEVI Menor o Igual a 35%** conocida):</label>
+                        <select id="disfuncionVentricular" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:border-primary-med focus:ring focus:ring-primary-med focus:ring-opacity-50">
+                            <option value="0">No</option>
+                            <option value="1">Sí (+2 CSRS)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-bold mt-8 mb-4 text-primary-dark border-b pb-2">Detalles del Episodio Sincopal</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="prodromosAusentes" class="block text-gray-700 font-semibold mb-1">Síncope sin Pródromos (Inicio Súbito):</label>
+                        <select id="prodromosAusentes" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:border-primary-med focus:ring focus:ring-primary-med focus:ring-opacity-50">
+                            <option value="0">No</option>
+                            <option value="1">Sí (+1 CSRS)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="predisposicionVasovagal" class="block text-gray-700 font-semibold mb-1">Predisposición Vasovagal (Pródromos, desencadenante claro):</label>
+                        <select id="predisposicionVasovagal" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:border-primary-med focus:ring focus:ring-primary-med focus:ring-opacity-50">
+                            <option value="0">No</option>
+                            <option value="1">Sí (-1 CSRS)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-bold mt-8 mb-4 text-severity-alert border-b-2 border-severity-alert pb-2">🚨 Banderas Rojas Clínicas (¡Alto Riesgo!)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-severity-bg p-4 rounded-lg shadow-inner">
+                    <div>
+                        <label for="sincopeEsfuerzo" class="block text-gray-700 font-semibold mb-1">Síncope de Esfuerzo o en Decúbito:</label>
+                        <select id="sincopeEsfuerzo" class="w-full p-3 border border-danger-dark rounded-lg shadow-sm focus:border-danger-med focus:ring focus:ring-danger-med focus:ring-opacity-50 bg-white">
+                            <option value="0">No</option>
+                            <option value="1">Sí (🚩 Alto Riesgo)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="focalidadNeurologica" class="block text-gray-700 font-semibold mb-1">Focalidad Neurológica Nueva/Persistente:</label>
+                        <select id="focalidadNeurologica" class="w-full p-3 border border-danger-dark rounded-lg shadow-sm focus:border-danger-med focus:ring focus:ring-danger-med focus:ring-opacity-50 bg-white">
+                            <option value="0">No</option>
+                            <option value="1">Sí (🚩 Alto Riesgo)</option>
+                        </select>
+                    </div>
+                </div>
+
+            </section>
+
+            <section class="border-b-2 border-gray-200 pb-6 pt-6">
+                <h2 class="text-2xl font-bold text-accent-med mb-4 flex items-center">
+                    <span class="mr-2">2️⃣</span> Paso 2: Exploración y Pruebas
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="taBaja" class="block text-gray-700 font-semibold mb-1">Presión Arterial Sistólica Menor o Igual a 90 mmHg (Al Triage):</label>
+                        <select id="taBaja" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:border-primary-med focus:ring focus:ring-primary-med focus:ring-opacity-50">
+                            <option value="0">No</option>
+                            <option value="1">Sí (+2 CSRS)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="ecgAnormal" class="block text-gray-700 font-semibold mb-1">ECG Anormal (Bloqueo AV, QRS ancho, Isquemia, Arritmias):</label>
+                        <select id="ecgAnormal" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:border-primary-med focus:ring focus:ring-primary-med focus:ring-opacity-50">
+                            <option value="0">No</option>
+                            <option value="1">Sí (+2 CSRS)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-bold mt-8 mb-4 text-primary-dark border-b pb-2">Resultados de Pruebas Específicas</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="troponinaElevada" class="block text-gray-700 font-semibold mb-1">Troponina Ultrasensible Elevada (sobre el percentil 99):</label>
+                        <select id="troponinaElevada" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:border-primary-med focus:ring focus:ring-primary-med focus:ring-opacity-50">
+                            <option value="0">No</option>
+                            <option value="1">Sí (+2 CSRS)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="tcAnormal" class="block text-gray-700 font-semibold mb-1">Resultado de Tomografía de Cerebro (TC Craneal Anormal, ej. Hemorragia/ACV):</label>
+                        <select id="tcAnormal" class="w-full p-3 border border-danger-dark rounded-lg shadow-sm focus:border-danger-med focus:ring focus:ring-danger-med focus:ring-opacity-50 bg-white">
+                            <option value="0">Normal</option>
+                            <option value="1">Anormal (🚩 Alto Riesgo Neurológico)</option>
+                        </select>
+                    </div>
+                </div>
+
+            </section>
+            
+            <h2 class="text-2xl font-bold text-accent-med mb-4 flex items-center">
+                <span class="mr-2">3️⃣</span> Paso 3: Cálculo y Acciones
+            </h2>
+            <div class="flex flex-col sm:flex-row justify-end space-y-4 sm:space-y-0 sm:space-x-4 pt-6 border-t border-gray-200 no-print">
+                <button type="button" onclick="limpiarFormulario()" class="flex-1 sm:flex-none bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200 shadow-md">
+                    🗑️ Limpiar Datos
+                </button>
+                <button type="button" onclick="imprimirResultados()" class="flex-1 sm:flex-none bg-accent-med hover:bg-accent-dark text-white font-bold py-3 px-6 rounded-lg transition duration-200 shadow-md">
+                    🖨️ Imprimir/Descargar (Auditoría)
+                </button>
+                <button type="button" onclick="calcularRiesgo()" class="flex-1 sm:flex-none bg-success-med hover:bg-success-dark text-white font-bold py-3 px-6 rounded-lg transition duration-200 shadow-lg">
+                    🧮 Calcular Riesgo
+                </button>
+            </div>
+
+        </form>
+
+        <section id="resultadoContainer" class="hidden-result mt-10 p-6 border-4 border-dashed rounded-lg bg-blue-50 shadow-inner">
+            <h2 class="text-3xl font-extrabold text-center mb-4 text-primary-dark">4️⃣ Resultado y Recomendación Final</h2>
+            
+            <div id="puntuacionCSRS" class="text-2xl font-semibold text-center mb-4 p-3 rounded-lg bg-primary-med text-white shadow-md"></div>
+            
+            <div id="clasificacionRiesgo" class="text-4xl font-extrabold text-center p-4 rounded-lg shadow-xl mb-6"></div>
+            
+            <div id="recomendacionManejo" class="text-xl p-5 rounded-lg border-l-8 font-medium bg-white shadow-sm"></div>
+
+            <h3 class="text-2xl font-bold mt-8 mb-4 text-danger-dark">Criterios de Riesgo/Protección Activados:</h3>
+            <ul id="criteriosRiesgoLista" class="list-disc list-inside space-y-2 text-lg text-gray-800 bg-white p-4 rounded-lg shadow-sm">
+                </ul>
+
+        </section>
+
+        <section class="mt-12 pt-8 border-t-2 border-gray-300">
+            <h2 class="text-xl font-bold text-gray-700 mb-4 flex items-center">
+                <span class="mr-2">📚</span> Fuentes y Referencias
+            </h2>
+            <ul class="list-disc list-inside space-y-2 text-md text-gray-600">
+                <li>**Canadian Syncope Risk Score (CSRS):** Kew, H. K., et al. (2016). *Canadian Syncope Risk Score to predict adverse events after syncope*. JAMA.</li>
+                <li>**European Society for Emergency Medicine (EUSEM):** Guías y consensos para el manejo del síncope en el servicio de urgencias (referencia al enfoque de *Red Flags*).</li>
+            </ul>
+        </section>
+
+    </main>
+
+    <footer class="text-center text-sm text-gray-600 mt-8 p-4 bg-gray-100 rounded-b-lg shadow-inner">
+        &copy; 2025 SyncopeAid. Herramienta Educativa y Evaluativa para Urgencias.
+    </footer>
+
+    <script>
+        function limpiarTextoLabel(text) {
+             // Elimina notaciones entre paréntesis y cualquier texto relacionado con puntaje CSRS
+            return text.replace(/(\(|\+.*?\))|( - MANEJO NEUROLÓGICO URGENTE)|(🚩 Alto Riesgo.*)/g, '').trim();
+        }
+
+        function calcularRiesgo() {
+            let score = 0;
+            const criteriosRiesgoCSRS = [];
+
+            // --- Factores CSRS (Incluye la corrección de antecedentesEdad: 1) ---
+            const inputsCSRS = {
+                antecedentesEdad: 1,         // +1 
+                antecedentesCardiopatia: 1,  // +1
+                disfuncionVentricular: 2,     // +2 
+                prodromosAusentes: 1,        // +1
+                taBaja: 2,                   // +2
+                ecgAnormal: 2,               // +2
+                troponinaElevada: 2,         // +2
+                predisposicionVasovagal: -1  // -1 (Factor Protector)
+            };
+
+            for (const id in inputsCSRS) {
+                const valor = parseInt(document.getElementById(id).value);
+                if (valor === 1) {
+                    score += inputsCSRS[id];
+                    
+                    const labelText = limpiarTextoLabel(document.querySelector(`label[for="${id}"]`).textContent);
+                    
+                    if (inputsCSRS[id] > 0) {
+                        criteriosRiesgoCSRS.push(`Riesgo: ${labelText} (+${inputsCSRS[id]} CSRS)`);
+                    } else if (inputsCSRS[id] < 0) {
+                        criteriosRiesgoCSRS.push(`✅ Protección: ${labelText} (${inputsCSRS[id]} CSRS)`);
+                    }
+                }
+            }
+
+            // --- Banderas Rojas/Riesgo Máximo (Prioridad sobre el CSRS) ---
+            let riesgoMaximo = false;
+            let clasificacion = '';
+            let colorClasificacion = '';
+            let recomendacion = '';
+            const criteriosAltoRiesgoLista = document.getElementById('criteriosRiesgoLista');
+            criteriosAltoRiesgoLista.innerHTML = ''; // Limpiar lista
+            const redFlagsActivas = [];
+
+            // Red Flags que anulan el CSRS
+            const redFlags = [
+                { id: 'sincopeEsfuerzo', texto: 'Síncope de Esfuerzo o en Decúbito' },
+                { id: 'focalidadNeurologica', texto: 'Focalidad Neurológica Nueva/Persistente' },
+                { id: 'tcAnormal', texto: 'TC Craneal Anormal (Hemorragia/ACV)' }
+            ];
+
+            redFlags.forEach(flag => {
+                if (parseInt(document.getElementById(flag.id).value) === 1) {
+                    riesgoMaximo = true;
+                    let textoAdicional = flag.id === 'tcAnormal' ? ' - MANEJO NEUROLÓGICO URGENTE' : ' - ALTO RIESGO CLÍNICO';
+                    redFlagsActivas.push({
+                        texto: flag.texto + textoAdicional,
+                        esAltoRiesgo: true
+                    });
+                }
+            });
+            
+            // Listar Red Flags
+            redFlagsActivas.forEach(flag => {
+                criteriosAltoRiesgoLista.innerHTML += `<li class="text-danger-med font-bold flex items-start"><span class="text-2xl mr-2">🚨</span>${flag.texto}</li>`;
+            });
+            
+            // Añadir criterios CSRS 
+            criteriosRiesgoCSRS.forEach(criterio => {
+                // Verificar si es un factor CSRS que ya ha sido cubierto por una Red Flag
+                const yaCubiertoPorRedFlag = redFlagsActivas.some(flag => criterio.includes(limpiarTextoLabel(flag.texto)));
+
+                if (!yaCubiertoPorRedFlag) {
+                    let clase = criterio.includes('Protección') ? 'text-success-dark' : 'text-gray-800';
+                    let icono = criterio.includes('Protección') ? '✅' : '•';
+                    criteriosAltoRiesgoLista.innerHTML += `<li class="${clase} flex items-start"><span class="text-xl mr-2">${icono}</span>${criterio}</li>`;
+                }
+            });
+
+            // Si no hay criterios específicos, indicar
+            if (criteriosAltoRiesgoLista.children.length === 0) {
+                criteriosAltoRiesgoLista.innerHTML += `<li class="text-gray-500 italic">Ningún factor de riesgo o bandera roja significativo identificado.</li>`;
+            }
+
+
+            // --- Clasificación basada en el CSRS y Riesgo Máximo ---
+            if (riesgoMaximo || score >= 3) {
+                clasificacion = 'ALTO RIESGO 🔴';
+                colorClasificacion = 'bg-danger-med text-white';
+                recomendacion = 'El paciente cumple criterios de **ALTO RIESGO** (CSRS ≥ 3 o Bandera Roja). Se requiere **INGRESO HOSPITALARIO INMEDIATO**, monitorización continua y estudio etiológico urgente para descartar patología grave.';
+            } else if (score >= 1 && score <= 2) {
+                clasificacion = 'MEDIANO RIESGO 🟡';
+                colorClasificacion = 'bg-warning-med text-gray-900';
+                recomendacion = 'El paciente es de **MEDIANO RIESGO** (CSRS 1-2). Se recomienda **OBSERVACIÓN** en Urgencias o manejo en una Unidad de Estancia Corta (UEC) con monitorización cardíaca y estudio complementario dirigido.';
+            } else { // score <= 0
+                clasificacion = 'BAJO RIESGO 🟢';
+                colorClasificacion = 'bg-success-med text-white';
+                recomendacion = 'El paciente es de **BAJO RIESGO** (CSRS ≤ 0). Se recomienda **ALTA** con plan de seguimiento ambulatorio (cardiología/neurología según el caso) y recomendaciones de estilo de vida.';
+            }
+            
+            // --- Mostrar Resultados ---
+            document.getElementById('puntuacionCSRS').textContent = `Puntuación CSRS Total: ${score}`;
+            document.getElementById('clasificacionRiesgo').textContent = clasificacion;
+            document.getElementById('clasificacionRiesgo').className = `text-4xl font-extrabold text-center p-4 rounded-lg shadow-xl mb-6 ${colorClasificacion}`;
+            
+            document.getElementById('recomendacionManejo').innerHTML = recomendacion;
+            document.getElementById('recomendacionManejo').className = `text-xl p-5 rounded-lg border-l-8 font-medium bg-white shadow-sm ${riesgoMaximo || score >= 3 ? 'border-danger-dark' : score >= 1 ? 'border-warning-dark' : 'border-success-dark'}`;
+            
+            document.getElementById('resultadoContainer').classList.remove('hidden-result');
+        }
+
+        function limpiarFormulario() {
+            document.getElementById('syncopeForm').reset();
+            document.getElementById('resultadoContainer').classList.add('hidden-result');
+            document.getElementById('recomendacionManejo').className = 'text-xl p-5 rounded-lg border-l-8 font-medium bg-white shadow-sm';
+            // Restablecer el color del borde de recomendación al original si no se vuelve a calcular
+            document.getElementById('recomendacionManejo').classList.add('border-gray-300'); 
+        }
+
+        function imprimirResultados() {
+            calcularRiesgo(); 
+
+            const printWindow = window.open('', '_blank', 'height=600,width=800');
+            printWindow.document.write('<html><head><title>Informe SyncopeAid</title>');
+            printWindow.document.write('<style>');
+            printWindow.document.write('body { font-family: sans-serif; padding: 20px; color: #333; }');
+            printWindow.document.write('h1 { color: #3498db; text-align: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px; }');
+            printWindow.document.write('h2 { color: #9b59b6; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-top: 20px; }');
+            printWindow.document.write('h3 { color: #e74c3c; margin-top: 15px; }');
+            printWindow.document.write('.resultado { border: 2px solid #3498db; padding: 20px; margin-top: 20px; border-radius: 8px; background-color: #eaf3fa; }');
+            printWindow.document.write('.alto-riesgo { color: #e74c3c; font-weight: bold; }');
+            printWindow.document.write('.mediano-riesgo { color: #f39c12; font-weight: bold; }');
+            printWindow.document.write('.bajo-riesgo { color: #2ecc71; font-weight: bold; }');
+            printWindow.document.write('ul { list-style-type: none; padding-left: 0; }'); 
+            printWindow.document.write('li { margin-bottom: 8px; list-style-type: none;}');
+            printWindow.document.write('.datos-clave li { list-style-type: disc; margin-left: 20px; }'); // Sólo para la lista de datos clave
+            printWindow.document.write('.label { font-weight: bold; }');
+            printWindow.document.write('</style>');
+            printWindow.document.write('</head><body>');
+            
+            printWindow.document.write('<h1>INFORME DE EVALUACIÓN CLÍNICA DE SÍNCOPE (SyncopeAid)</h1>');
+            
+            printWindow.document.write('<h2>Datos Clave de Evaluación</h2>');
+            const formElements = document.getElementById('syncopeForm').elements;
+            let datosClaveHTML = '<ul class="datos-clave">';
+            for (let i = 0; i < formElements.length; i++) {
+                if (formElements[i].tagName === 'SELECT') {
+                    const labelText = document.querySelector(`label[for="${formElements[i].id}"]`) ? limpiarTextoLabel(document.querySelector(`label[for="${formElements[i].id}"]`).textContent) : formElements[i].id;
+                    const valueText = formElements[i].options[formElements[i].selectedIndex] ? limpiarTextoLabel(formElements[i].options[formElements[i].selectedIndex].text) : 'N/A';
+                    datosClaveHTML += `<li><span class="label">${labelText}:</span> ${valueText}</li>`;
+                }
+            }
+            datosClaveHTML += '</ul>';
+            printWindow.document.write(datosClaveHTML);
+            
+            printWindow.document.write('<h2>Resultados de Estratificación de Riesgo</h2>');
+            printWindow.document.write('<div class="resultado">');
+            
+            const clasificacionTexto = document.getElementById('clasificacionRiesgo').textContent;
+            const clasificacionClase = clasificacionTexto.toLowerCase().includes('alto') ? 'alto-riesgo' : clasificacionTexto.toLowerCase().includes('mediano') ? 'mediano-riesgo' : 'bajo-riesgo';
+
+            printWindow.document.write(`<p><strong>Clasificación de Riesgo:</strong> <span class="${clasificacionClase}">${clasificacionTexto}</span></p>`);
+            printWindow.document.write(`<p><strong>Puntuación CSRS Total:</strong> ${document.getElementById('puntuacionCSRS').textContent.split(': ')[1]}</p>`);
+            printWindow.document.write('<p><strong>Recomendación de Manejo:</strong></p>');
+            printWindow.document.write(`<p>${document.getElementById('recomendacionManejo').innerHTML}</p>`);
+            
+            printWindow.document.write('<h3>Criterios de Riesgo/Protección Activados:</h3>');
+            printWindow.document.write(`<ul>${document.getElementById('criteriosRiesgoLista').innerHTML.replace(/text-danger-med font-bold/g, 'alto-riesgo').replace(/text-success-dark/g, 'bajo-riesgo').replace(/<span class="text-2xl mr-2">🚨<\/span>/g, '🚨 ').replace(/<span class="text-xl mr-2">✅<\/span>/g, '✅ ').replace(/<span class="text-xl mr-2">•<\/span>/g, '• ')}</ul>`);
+
+            printWindow.document.write('</div>');
+
+            printWindow.document.write('<h2>Fuentes y Referencias para Auditoría</h2>');
+            printWindow.document.write(document.querySelector('section:last-of-type ul').outerHTML);
+
+            printWindow.document.write('<p style="margin-top: 30px; text-align: right; border-top: 1px solid #ccc; padding-top: 10px;">Fecha de Evaluación: ' + new Date().toLocaleString() + '</p>');
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            
+            // Pequeño timeout para asegurar que el contenido se cargue antes de imprimir
+            setTimeout(() => {
+                printWindow.print();
+            }, 300);
+        }
+    </script>
+</body>
+</html>
